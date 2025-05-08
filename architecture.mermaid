@@ -1,0 +1,40 @@
+flowchart TB
+    subgraph GCP["Google Cloud Platform"]
+        AR["Artifact Registry\n(docker-repo)"]
+        
+        subgraph GKE["GKE Cluster (gmp-cluster)"]
+            subgraph NS["Namespace: gmp-test"]
+                FD["Deployment: hello-app"]
+                FS["Service: hello (LoadBalancer)"]
+                FD --> FS
+            end
+        end
+        
+        subgraph CM["Cloud Monitoring"]
+            LBM["Log-based Metric\nhello-app-error"]
+            MBA["Metrics-based Alert"]
+            LBA["Log-based Alert\n(stopped vm)"]
+            
+            LBM --> MBA
+        end
+        
+        subgraph CL["Cloud Logging"]
+            LE["Logs Explorer"]
+            ERRLOG["Error Logs\n(severity=ERROR)"]
+            VMLOG["VM Stop Logs"]
+            
+            LE --> ERRLOG
+            LE --> VMLOG
+            ERRLOG --> LBM
+            VMLOG --> LBA
+        end
+        
+        AR --> FD
+        FS --> ERRLOG
+    end
+    
+    NC["Notification Channels"] --> MBA
+    NC --> LBA
+    
+    U["User"] --> FS
+    U --> NC
